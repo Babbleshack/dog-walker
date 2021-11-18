@@ -1,0 +1,5 @@
+click==8.0.3
+pydantic==1.8.2
+toml==0.10.2
+objprint==0.1.3
+

@@ -1,0 +1,28 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/babbleshack/Documents/PhD/projects/dog-walker/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20210905.0/
+Config	walker.py	/^Config = None$/;"	v
+Configuration	walker.py	/^class Configuration:$/;"	c
+Dog Walker	README.md	/^# Dog Walker$/;"	c
+Example run	README.md	/^## Example run$/;"	s	chapter:Dog Walker
+Job	walker.py	/^class Job:$/;"	c
+__init__	walker.py	/^    def __init__(self, id, worker_pool_size, job_confs):$/;"	m	class:Configuration
+__init__	walker.py	/^    def __init__(self, path_to_cmd: str, *args):$/;"	m	class:Job
+cancel_me	test.py	/^async def cancel_me():$/;"	f
+from_toml	walker.py	/^    def from_toml(cls, conf):$/;"	m	class:Configuration
+handler	walker.py	/^async def handler(config: Configuration):$/;"	f
+logger	walker.py	/^logger = logging.getLogger(__name__)$/;"	v
+logging_format	walker.py	/^logging_format = "%(levelname)s %(asctime)s = %(message)s"$/;"	v
+main	test.py	/^async def main():$/;"	f
+read_config	walker.py	/^def read_config(path):$/;"	f
+run	walker.py	/^    async def run(self):$/;"	m	class:Job
+start	walker.py	/^def start(config_path):$/;"	f
+worker	walker.py	/^async def worker(jobs: asyncio.Queue, out: asyncio.Queue, id=0):$/;"	f
