@@ -1,5 +1,6 @@
 id = "test"
-worker_pool_size = 3
+worker_pool_size = 1
+out_dir='./out'
 jobs = [
 {path_to_cmd = "./spark-stream.sh", number_of_jobs = 1},
 {path_to_cmd = "./spark-ml.sh",     number_of_jobs = 1},

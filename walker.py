@@ -2,10 +2,11 @@ import asyncio
 import logging
 import random
 import toml
-import sys
 import click
-import pprint
+import random
+import datetime
 
+from pathlib import Path
 from asyncio import CancelledError
 from objprint import add_objprint
 
@@ -30,14 +31,20 @@ def read_config(path):
 
 @add_objprint
 class Configuration:
-    def __init__(self, id, worker_pool_size, job_confs):
+    def __init__(self, id, worker_pool_size, job_confs, out_dir):
         self.id = id
         self.worker_pool_size = worker_pool_size
         self.job_confs = job_confs
+        self.out_dir = out_dir
 
     @classmethod
     def from_toml(cls, conf):
-        return cls(conf["id"], conf["worker_pool_size"], conf["jobs"])
+        return cls(
+            id=conf["id"],
+            worker_pool_size=conf["worker_pool_size"],
+            job_confs=conf["jobs"],
+            out_dir=conf["out_dir"],
+        )
 
 
 @add_objprint
@@ -48,33 +55,55 @@ class Job:
         self.cmd = path_to_cmd
         self.args = args
 
-    async def run(self):
-        await asyncio.sleep(random.randrange(1, 10))
-        self.proc = await asyncio.create_subprocess_exec(
-            self.cmd,
-            str(self.args),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+    async def run(self, stdout_path):
+        with open(stdout_path, mode="w") as f:
+            self.proc = await asyncio.create_subprocess_exec(
+                self.cmd,
+                str(self.args),
+                stdout=f,
+                stderr=f,
+            )
         stdout, stderr = await self.proc.communicate()
         return stdout, stderr
 
 
-async def worker(jobs: asyncio.Queue, out: asyncio.Queue, id=0):
+async def worker(jobs: asyncio.Queue, id, out_dir):
     """Worker read from jobs queue executes job and writes stdout to out queue"""
+    if id == None:
+        logger.warn(
+            "worker id is not set, generating random id, this can lead to data loss"
+        )
+        id = random.randrange(0, 1024)
     logger.info(f"[worker {id}] Starting...")
     try:
         while True:
+            ## Wait for next job
             job = await jobs.get()
+            ## Create stdout path
+            path = (
+                Path(out_dir)
+                / str(id)
+                / job.cmd
+                / str(round(datetime.datetime.now().timestamp()))
+            )
+            if path.is_dir():
+                logger.warn(f"stdout path [{path}] already exists, overwriting")
+            path.mkdir(parents=True, exist_ok=True)
+            path = path / "stdout.txt"
             ## process job
-            logger.info(f"[worker {id}] proccessing command: {job.cmd}")
-            stdout, _ = await job.run()
+            logger.info(
+                f"[worker {id}] proccessing command: {job.cmd}, stdout: [{path}]"
+            )
+            stdout, _ = await job.run(str(path.absolute()))
             jobs.task_done()
             logger.info(
                 f"[worker {id}] finished proccessing command: {job.cmd}: {stdout}"
             )
     except CancelledError:
         logger.info(f"[worker {id}] Cancelling...")
+        raise
+    except Exception as e:
+        logger.error(f"There was an unexpected error {e}")
         raise
     finally:
         logger.info(f"[worker {id}] cleaning up")
@@ -88,10 +117,9 @@ async def handler(config: Configuration):
         )
     random.shuffle(jobs_list)
     jobs_q = asyncio.Queue(maxsize=len(jobs_list))
-    out = asyncio.Queue()
     # tasks is a task pool
     tasks = [
-        asyncio.create_task(worker(jobs_q, out, id=i))
+        asyncio.create_task(worker(jobs_q, id=i, out_dir=config.out_dir))
         for i in range(config.worker_pool_size)
     ]
     for job in jobs_list:
